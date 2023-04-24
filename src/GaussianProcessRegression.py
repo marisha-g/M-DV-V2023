@@ -1,4 +1,3 @@
-# %%
 """
 Import libraries
 """
@@ -38,7 +37,7 @@ from anisotropic_kernel import GeometricAnisotropy
 # Matrics
 import properscoring as ps
 from sklearn.metrics import r2_score, mean_squared_error
-# %%
+
 """
 Load data 
 """
@@ -78,7 +77,6 @@ y_test_sc = scalery.transform(y_test)
 y_train = y_train_sc.ravel()
 y_test = y_test_sc.ravel()
 
-# %%
 """
 Plot data
 """
@@ -88,7 +86,6 @@ fig = go.Figure(go.Scatter(mode="markers", x=X_train[:,0], y=X_train[:,1],
 
 fig.show()
 
-# %%
 def kernel_func(mode, tfk_kernel, vals_for_mean=None, mean_func=None): 
     """
     Define kernel function to be used in the Gaussian Process.
@@ -233,7 +230,6 @@ def kernel_func(mode, tfk_kernel, vals_for_mean=None, mean_func=None):
 # Specify kernel type
 kernel, mean_fn, trainable_variables, observation_noise_variance_var, variables = kernel_func("anisotropy", "matern", vals_for_mean=y, mean_func="yes")
 
-# %%
 """
 Train model an tune hyperparameters 
 """
@@ -291,7 +287,6 @@ df_variables = pd.DataFrame(
     data, columns=['Hyperparameters', 'Value'])
 df_variables
 
-# %%
 """
 Plot the loss function
 """
@@ -341,75 +336,7 @@ r_two = r2_score(y_test, mean_preds)
 crps = ps.crps_gaussian(y_test, mean_preds, posterior_std_predict).mean()
 print(rmse, r_two, crps)
 
-# %%
-"""
-Plot posterior predictions and true data
-"""
 
-# Get posterior predictions
-# Scale back the predicted mean and standard deviation
-y_pred = scalery.inverse_transform(np.array(posterior_mean_predict).reshape(-1, 1))
-y_std = scalery.inverse_transform(np.array(posterior_std_predict).reshape(-1, 1))
-
-# Reshape the predictions to match the meshgrid shape
-z_pred = y_pred.ravel()
-z_std = y_std.ravel()
-
-mu = z_pred #posterior_mean_predict.numpy()
-sigma = z_std #posterior_std_predict.numpy()
-# The 95% CI is computed as mean ± (1.96 * stdv)
-upper = (mu + (1.96 * sigma)).tolist()
-lower = (mu - (1.96 * sigma)).tolist()
-
-def plot_uncertainty(target, prediction_mean, upper_CI, lower_CI):
-    fig = go.Figure([
-        go.Scatter(
-            name='True data',
-            y = target,
-            mode='lines',
-            line=dict(color='rgb(31, 119, 180)'),
-        ),
-
-        go.Scatter(
-            name='Mean pred',
-            y = prediction_mean,
-            mode='lines',
-            line=dict(color='rgb(253, 170, 170)'),
-        ),
-
-        go.Scatter(
-            name='95% CI Upper',
-            y=upper_CI,
-            mode='lines',
-            marker=dict(color='#444'),
-            line=dict(width=0),
-            showlegend=False
-        ),
-        go.Scatter(
-            name='95% CI Lower',
-            y=lower_CI,
-            marker=dict(color='#444'),
-            line=dict(width=0),
-            mode='lines',
-            fillcolor='rgba(68, 68, 68, 0.3)',
-            fill='tonexty',
-            showlegend=False
-        )
-    ])
-
-    fig.update_layout(
-        xaxis_title='X',
-        yaxis_title='Y',
-        title='Posterior predictions conditioned on observations',
-        hovermode="x"
-    )
-    fig.show()
-
-    return
-
-plot_uncertainty(df['DTB'], mu, upper, lower)
-
-# %%
 """Plot uncertainty and prediction maps"""
 # Create meshgrid
 x, y = np.meshgrid(np.linspace(-3, 2, 100), np.linspace(-3, 2, 100))
@@ -431,7 +358,6 @@ print(min(posterior_mean_predict), max(posterior_mean_predict))
 print(min(posterior_std_predict), max(posterior_std_predict))
 
 
-# %%
 # Scale back the predicted mean and standard deviation
 y_pred = scalery.inverse_transform(np.array(posterior_mean_predict).reshape(-1, 1))
 y_std = scalery.inverse_transform(np.array(posterior_std_predict).reshape(-1, 1))
@@ -442,8 +368,6 @@ z_std = y_std.ravel()
 # Axis limits for the plots
 print(np.min(z_pred), np.max(z_pred))
 print(np.min(z_std), np.max(z_std))
-
-# %%
 
 fig = make_subplots(rows=1, cols=2, subplot_titles=("Interpolation", "Uncertainty estimation"), shared_yaxes=True, horizontal_spacing=0.2)
 
@@ -475,86 +399,3 @@ fig.update_layout(
 
 fig.show()
 
-# %%
-"""
-Plot posterior predictions and true data
-"""
-mu = z_pred #posterior_mean_predict.numpy()
-sigma = z_std #posterior_std_predict.numpy()
-# The 95% CI is computed as mean ± (1.96 * stdv)
-upper = (mu + (1.96 * sigma)).tolist()
-lower = (mu - (1.96 * sigma)).tolist()
-
-def plot_uncertainty(target, prediction_mean, upper_CI, lower_CI):
-    fig = go.Figure([
-        go.Scatter(
-            name='True data',
-            y = target,
-            mode='lines',
-            line=dict(color='rgb(31, 119, 180)'),
-        ),
-
-        go.Scatter(
-            name='Mean pred',
-            y = prediction_mean,
-            mode='lines',
-            line=dict(color='rgb(253, 170, 170)'),
-        ),
-
-        go.Scatter(
-            name='95% CI Upper',
-            y=upper_CI,
-            mode='lines',
-            marker=dict(color='#444'),
-            line=dict(width=0),
-            showlegend=False
-        ),
-        go.Scatter(
-            name='95% CI Lower',
-            y=lower_CI,
-            marker=dict(color='#444'),
-            line=dict(width=0),
-            mode='lines',
-            fillcolor='rgba(68, 68, 68, 0.3)',
-            fill='tonexty',
-            showlegend=False
-        )
-    ])
-
-    fig.update_layout(
-        xaxis_title='X',
-        yaxis_title='Y',
-        title='Posterior predictions conditioned on observations',
-        hovermode="x"
-    )
-    fig.show()
-
-    return
-
-plot_uncertainty(df['DTB'], mu, upper, lower)
-
-
-# %%
-"""
-Heatmap
-"""
-fig = go.Figure(data =
-     go.Heatmap(x = x.flatten(), y = y.flatten(), z = z_pred,))
-  
-fig.show()
-
-
-# %%
-"""Save predictions"""
-result = pd.DataFrame(data={'x': X[:,0], 'y': X[:,1], 'predictions': samples})
-train_data = pd.DataFrame(data={'x': X_train[:,0], 'y': X_train[:,1], 'y_true': y_train})
-result.to_csv(path_or_buf='C:\\Users\\Maris\\Documents\\GitHub\\master\\Main\\Results\\results_berum.csv', index = False, header = True)
-train_data.to_csv(path_or_buf='C:\\Users\\Maris\\Documents\\GitHub\\master\\Main\\Results\\train_berum.csv', index = False, header = True)
-
-
-# test med og uten anisotropi på ulik data og med ulike kjerne
-# mean funksjon til å være et polynom eller lineær flate og tren den som en variabel
-# skriv ut et plan som en funksjon (med tre komponenter) 
-# sjekk metrikk 
-# tf.seed 
-# lag to interpolasjonskart, et for usikkerhetene og et for prediksjonene
