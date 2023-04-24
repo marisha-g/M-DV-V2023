@@ -32,9 +32,9 @@ import plotly.graph_objs as go
 import matplotlib.pyplot as plt
 
 #from anisotropic_kernel import GeometricAnisotropy
-from anisotropic_kernel import GeometricAnisotropy
+from kernel_setup import kernel_setup
 
-# Matrics
+# Metrics
 import properscoring as ps
 from sklearn.metrics import r2_score, mean_squared_error
 
@@ -86,149 +86,9 @@ fig = go.Figure(go.Scatter(mode="markers", x=X_train[:,0], y=X_train[:,1],
 
 fig.show()
 
-def kernel_func(mode, tfk_kernel, vals_for_mean=None, mean_func=None): 
-    """
-    Define kernel function to be used in the Gaussian Process.
-    Mode: anisotropy or isotropy
-    kernel: choose base kernel, either exponentiaded quadratic or linear tensorflow tfp.math.psd_kernels module
-    mean func: choose if mean function should be constant 0 (Default) or constant target mean (1)
-    """
-
-    # Constrain to make sure certain parameters are strictly positive
-    constrain_positive = tfb.Shift(np.finfo(np.float64).tiny)(tfb.Exp())
-
-    # Noise variance of observations
-    observation_noise_variance_var = tfp.util.TransformedVariable(
-        initial_value=0.001, bijector=constrain_positive, dtype=np.float64,
-        name='observation_noise_variance')
-    
-    # Mean function
-    if mean_func == "yes":
-        observations_mean = tf.constant([np.mean(vals_for_mean)], dtype=tf.float64)
-        mean_fn = lambda _: observations_mean
-    else:
-        mean_fn = None
-
-    # Define kernel hyperparameters
-    amplitude_var = tfp.util.TransformedVariable(
-        initial_value=1., 
-        dtype=np.float64, 
-        bijector=constrain_positive,
-        name='amplitude')
-    
-    angle_var = tfp.util.TransformedVariable(
-        initial_value=np.pi / 2, 
-        bijector=constrain_positive, 
-        dtype=tf.float64, 
-        name="angle")
-
-    lambda1_var = tfp.util.TransformedVariable(
-        initial_value=1., 
-        dtype=np.float64, 
-        bijector=constrain_positive,
-        name='lambda1')
-
-    lambda2_var = tfp.util.TransformedVariable(
-        initial_value=1., 
-        dtype=np.float64, 
-        bijector=constrain_positive,
-        name='lambda2')
-    
-    length_scale_var = tfp.util.TransformedVariable(
-        initial_value=10., 
-        dtype=np.float64, 
-        bijector=constrain_positive,
-        name='length_scale')
-
-    bias_amplitude_var = tfp.util.TransformedVariable(
-        initial_value=0.0001, 
-        dtype=np.float64, 
-        bijector=constrain_positive,
-        name='bias_amplitude')
-
-    slope_amplitude_var = tfp.util.TransformedVariable(
-        initial_value=1., 
-        dtype=np.float64, 
-        bijector=constrain_positive,
-        name='slope_amplitude')
-
-    shift_var = tfp.util.TransformedVariable(
-        initial_value=0.0001, 
-        dtype=np.float64, 
-        bijector=constrain_positive,
-        name='shift')
-    
-    if mode == "anisotropy":
-        if tfk_kernel == "linear":
-            base_kernel = tfk.Linear(bias_amplitude_var, slope_amplitude_var, shift_var)
-            kernel = GeometricAnisotropy(base_kernel, lambda1_var, lambda2_var, angle_var)
-            trainable_variables = [v.variables[0] for v in [
-                lambda1_var,
-                lambda2_var,
-                angle_var,
-                observation_noise_variance_var,
-                bias_amplitude_var, 
-                slope_amplitude_var, 
-                shift_var
-                ]]
-            variables = [lambda1_var, lambda2_var, angle_var, bias_amplitude_var, slope_amplitude_var, shift_var, observation_noise_variance_var]
-        if tfk_kernel == "exp_quad":
-            base_kernel = tfk.ExponentiatedQuadratic(amplitude_var)
-            kernel = GeometricAnisotropy(base_kernel, lambda1_var, lambda2_var, angle_var)
-            trainable_variables = [v.variables[0] for v in [
-                amplitude_var, 
-                lambda1_var,
-                lambda2_var,
-                angle_var,
-                observation_noise_variance_var
-                ]]
-            variables = [amplitude_var, lambda1_var, lambda2_var, angle_var, observation_noise_variance_var]
-        
-        if tfk_kernel == "matern":
-            base_kernel = tfk.MaternThreeHalves(amplitude_var)
-            kernel = GeometricAnisotropy(base_kernel, lambda1_var, lambda2_var, angle_var)
-            trainable_variables = [v.variables[0] for v in [
-                amplitude_var, 
-                lambda1_var,
-                lambda2_var,
-                angle_var,
-                observation_noise_variance_var
-                ]]
-            variables = [amplitude_var, lambda1_var, lambda2_var, angle_var, observation_noise_variance_var]
-
-    if mode == "isotropy":
-        if tfk_kernel == "linear":
-            kernel = tfk.Linear(bias_amplitude_var, slope_amplitude_var, shift_var)
-            trainable_variables = [v.variables[0] for v in [
-                bias_amplitude_var, 
-                slope_amplitude_var, 
-                shift_var,
-                observation_noise_variance_var
-                ]]
-            variables = [bias_amplitude_var, slope_amplitude_var, shift_var, observation_noise_variance_var]
-
-        if tfk_kernel == "exp_quad":
-            kernel = tfk.ExponentiatedQuadratic(amplitude_var, length_scale_var)
-            trainable_variables = [v.variables[0] for v in [
-                amplitude_var, 
-                length_scale_var,
-                observation_noise_variance_var
-                ]]
-            variables = [amplitude_var, length_scale_var, observation_noise_variance_var]
-        
-        if tfk_kernel == "matern":
-            kernel = tfk.MaternThreeHalves(amplitude_var, length_scale_var)
-            trainable_variables = [v.variables[0] for v in [
-                amplitude_var, 
-                length_scale_var,
-                observation_noise_variance_var
-                ]]
-            variables = [amplitude_var, length_scale_var, observation_noise_variance_var]
-
-    return kernel, mean_fn, trainable_variables, observation_noise_variance_var, variables
 
 # Specify kernel type
-kernel, mean_fn, trainable_variables, observation_noise_variance_var, variables = kernel_func("anisotropy", "matern", vals_for_mean=y, mean_func="yes")
+kernel, mean_fn, trainable_variables, observation_noise_variance_var, variables = kernel_setup("anisotropy", "matern", vals_for_mean=y, mean_func="yes")
 
 """
 Train model an tune hyperparameters 
