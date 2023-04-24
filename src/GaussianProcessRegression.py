@@ -77,16 +77,6 @@ y_test_sc = scalery.transform(y_test)
 y_train = y_train_sc.ravel()
 y_test = y_test_sc.ravel()
 
-"""
-Plot data
-"""
-fig = go.Figure(go.Scatter(mode="markers", x=X_train[:,0], y=X_train[:,1],
-                           marker_line_color="midnightblue", marker_color=y_train,
-                           marker_line_width=1, marker_size=5))
-
-fig.show()
-
-
 # Specify kernel type
 kernel, mean_fn, trainable_variables, observation_noise_variance_var, variables = kernel_setup("anisotropy", "matern", vals_for_mean=y, mean_func="yes")
 
@@ -197,7 +187,7 @@ crps = ps.crps_gaussian(y_test, mean_preds, posterior_std_predict).mean()
 print(rmse, r_two, crps)
 
 
-"""Plot uncertainty and prediction maps"""
+"""Plot interpolation and uncertainty maps"""
 # Create meshgrid
 x, y = np.meshgrid(np.linspace(-3, 2, 100), np.linspace(-3, 2, 100))
 X = np.column_stack((x.ravel(), y.ravel()))
@@ -249,7 +239,6 @@ fig.add_trace(go.Scatter(x=X_train[:,0], y=X_train[:,1], mode='markers', marker_
 
 # Update layout
 fig.update_layout(
-    title = "Anisotropic kernel",
     width=1200, 
     height=500, 
     showlegend=False, 
