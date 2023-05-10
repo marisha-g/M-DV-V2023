@@ -74,6 +74,9 @@ y_test_sc = y_test_sc.ravel()
 # %%
 """
 Train model and tune hyperparameters 
+Reference for the following code: 
+Roelants, Peter. "peterroelants.github.io". 2023. 
+https://github.com/peterroelants/peterroelants.github.io/blob/main/notebooks/gaussian_process/gaussian-process-kernel-fitting.ipynb.
 """
 # Specify kernel type
 kernel, mean_fn, trainable_variables, observation_noise_variance_var, variables = kernel_setup(
